@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026年度开发计划 - 小渔夫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .gantt-bar { transition: all 0.3s ease; cursor: pointer; }
+        .gantt-bar:hover { transform: scaleY(1.15); filter: brightness(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .owner-嘉劲 { background-color: #8b5cf6; }
+        .owner-志锐 { background-color: #10b981; }
+        .owner-潘永明 { background-color: #3b82f6; }
+        .owner-康丹 { background-color: #f59e0b; }
+        .line-装修 { border-left: 4px solid #3b82f6; }
+        .line-后台 { border-left: 4px solid #10b981; }
+        .line-AI { border-left: 4px solid #8b5cf6; }
+        .line-营销 { border-left: 4px solid #ec4899; }
+        .timeline-dot { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 600; }
+        .filter-chip { transition: all 0.2s ease; cursor: pointer; user-select: none; }
+        .filter-chip:hover { transform: scale(1.05); }
+        .filter-chip.active { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+        .filter-chip.inactive { opacity: 0.4; }
+        .priority-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .priority-P0 { background: #fef2f2; color: #dc2626; }
+        .priority-P1 { background: #fffbeb; color: #d97706; }
+        .priority-P2 { background: #eff6ff; color: #2563eb; }
+        .line-badge { font-size: 9px; padding: 1px 4px; border-radius: 3px; }
+        .tooltip { position: fixed; z-index: 100; background: #1f2937; color: white; padding: 12px 16px; border-radius: 8px; font-size: 13px; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+        .tooltip.show { opacity: 1; }
+        .filter-summary { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
+        .quarter-goal-card { transition: all 0.3s ease; }
+        .quarter-goal-card:hover { transform: translateY(-3px); }
+
+        /* 移动端优化样式 */
+        @media (max-width: 768px) {
+            .gantt-desktop { display: none !important; }
+            .gantt-mobile { display: block !important; }
+            .mobile-tab-select { display: block !important; }
+            .desktop-tabs { display: none !important; }
+        }
+        @media (min-width: 769px) {
+            .gantt-desktop { display: block !important; }
+            .gantt-mobile { display: none !important; }
+            .mobile-tab-select { display: none !important; }
+            .desktop-tabs { display: flex !important; }
+        }
+
+        /* 移动端卡片样式 */
+        .mobile-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid;
+        }
+        .mobile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .mobile-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.4;
+            flex: 1;
+            margin-right: 8px;
+        }
+        .mobile-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        .mobile-card-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* 移动端Tab下拉选择器 */
+        .mobile-tab-select select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            font-size: 15px;
+            background: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        /* 移动端表格卡片 */
+        .mobile-stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .mobile-stat-header {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .mobile-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        .mobile-stat-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            margin-top: 8px;
+            border-top: 1px solid #e5e7eb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="tooltip" class="tooltip"></div>
+
+    <!-- 移动端详情模态框 -->
+    <div id="mobileModal" class="modal-overlay" onclick="closeMobileModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="text-lg font-bold text-gray-800">需求详情</h3>
+                <button class="modal-close" onclick="closeMobileModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white py-8 px-6 shadow-xl">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">2026年度开发计划</h1>
+                    <p class="text-blue-100 mt-2">小渔夫产品技术团队</p>
+                </div>
+                <div class="flex gap-6">
+                    <div class="text-center"><div class="text-4xl font-bold">86</div><div class="text-blue-200 text-sm">需求总数</div></div>
+                    <div class="text-center"><div class="text-4xl font-bold">31</div><div class="text-blue-200 text-sm">团队成员</div></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 年度目标 -->
+    <section class="max-w-7xl mx-auto px-6 py-8">
+        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-8 text-white shadow-xl">
+            <h2 class="text-2xl font-bold mb-6">2026 年度战略目标</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-3"><span class="text-4xl">🚀</span><h3 class="text-xl font-bold">AI建站革命</h3></div>
+                    <p class="text-white/90 text-sm leading-relaxed">构建新一代AI Agent智能建站平台，实现从对话到上线的全流程自动化，让AI成为外贸企业的智能建站引擎，引领外贸建站进入AI时代</p>
+                </div>
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-3"><span class="text-4xl">🎯</span><h3 class="text-xl font-bold">AI全场景营销</h3></div>
+                    <p class="text-white/90 text-sm leading-relaxed">打造AI内容生产、GEO智能优化、线索识别到询盘回复的全链路营销闭环，用人工智能提升外贸企业获客转化效率，实现品牌全网监控与自动化策略</p>
+                </div>
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-6">
+                    <div class="flex items-center gap-3 mb-3"><span class="text-4xl">🏗️</span><h3 class="text-xl font-bold">生态护城河</h3></div>
+                    <p class="text-white/90 text-sm leading-relaxed">构建开发者生态与插件市场，完善CRM与数据中台，打造外贸数智化营销的行业标准与技术壁垒，形成可持续的竞争优势</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Cards -->
+    <section class="max-w-7xl mx-auto px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 transition-all border-l-4 border-red-500"><p class="text-gray-500 text-sm">P0 核心</p><p class="text-3xl font-bold text-gray-800">37</p></div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 transition-all border-l-4 border-amber-500"><p class="text-gray-500 text-sm">P1 重要</p><p class="text-3xl font-bold text-gray-800">29</p></div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 transition-all border-l-4 border-blue-500"><p class="text-gray-500 text-sm">P2 一般</p><p class="text-3xl font-bold text-gray-800">23</p></div>
+            <div class="stat-card bg-white rounded-xl shadow-lg p-5 transition-all border-l-4 border-green-500"><p class="text-gray-500 text-sm">执行周期</p><p class="text-3xl font-bold text-gray-800">12月</p></div>
+        </div>
+    </section>
+
+    <!-- 季度目标详情 -->
+    <section class="max-w-7xl mx-auto px-6 py-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">季度目标与里程碑</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="quarter-goal-card bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-blue-500">
+                <div class="bg-blue-500 text-white px-6 py-4"><div class="flex items-center justify-between"><div><h3 class="text-xl font-bold">Q1 · 1-3月</h3><p class="text-blue-100 text-sm">夯实基础 · 3个亮点工具</p></div><div class="text-3xl font-bold">27</div></div></div>
+                <div class="p-6">
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">🎯 季度目标</h4><p class="text-sm text-gray-600">聚合研发资源，优化新版装修与云站后台，达到可销售水平；推出3个亮点AI工具</p></div>
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">💎 本季亮点AI工具</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-blue-500">1月</span>小渔夫AI·智能建站</li><li class="flex items-center gap-2"><span class="text-blue-500">2月</span>小渔夫AI·图像生成</li><li class="flex items-center gap-2"><span class="text-blue-500">3月</span>小渔夫GEO·AI品牌雷达</li></ul></div>
+                    <div><h4 class="font-semibold text-gray-800 mb-2">📌 关键里程碑</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-red-500">●</span>GEO监控体系上线·覆盖5大AI模型</li><li class="flex items-center gap-2"><span class="text-red-500">●</span>新版装修框架迁移完成·组件统一化</li><li class="flex items-center gap-2"><span class="text-red-500">●</span>AI智能建站闭环·5分钟上线外贸站</li></ul></div>
+                </div>
+            </div>
+            <div class="quarter-goal-card bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-green-500">
+                <div class="bg-green-500 text-white px-6 py-4"><div class="flex items-center justify-between"><div><h3 class="text-xl font-bold">Q2 · 4-6月</h3><p class="text-green-100 text-sm">产品成熟 · 3个亮点工具</p></div><div class="text-3xl font-bold">30</div></div></div>
+                <div class="p-6">
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">🎯 季度目标</h4><p class="text-sm text-gray-600">完善工具产品功能，达到内部可用且能对外销售水平；推出3个亮点AI工具</p></div>
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">💎 本季亮点AI工具</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-green-500">4月</span>小渔夫AI·发布产品</li><li class="flex items-center gap-2"><span class="text-green-500">5月</span>小渔夫AI·PS修图大师</li><li class="flex items-center gap-2"><span class="text-green-500">6月</span>小渔夫AI·社媒智能分发</li></ul></div>
+                    <div><h4 class="font-semibold text-gray-800 mb-2">📌 关键里程碑</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-red-500">●</span>GEO线索库上线·AI精准识别商机</li><li class="flex items-center gap-2"><span class="text-red-500">●</span>图片处理工具矩阵·精修/抠图/去水印</li><li class="flex items-center gap-2"><span class="text-red-500">●</span>工具商业化体系·销售团队+下单闭环</li></ul></div>
+                </div>
+            </div>
+            <div class="quarter-goal-card bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-amber-500">
+                <div class="bg-amber-500 text-white px-6 py-4"><div class="flex items-center justify-between"><div><h3 class="text-xl font-bold">Q3 · 7-9月</h3><p class="text-amber-100 text-sm">AI工具落地 · 3个亮点工具</p></div><div class="text-3xl font-bold">24</div></div></div>
+                <div class="p-6">
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">🎯 季度目标</h4><p class="text-sm text-gray-600">推出外贸行业AI工具，达到数智化营销水平；推出3个亮点AI工具</p></div>
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">💎 本季亮点AI工具</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-amber-500">7月</span>小渔夫GEO·内容智造</li><li class="flex items-center gap-2"><span class="text-amber-500">8月</span>小渔夫AI·线索猎手</li><li class="flex items-center gap-2"><span class="text-amber-500">9月</span>小渔夫AI·社媒运营</li></ul></div>
+                    <div><h4 class="font-semibold text-gray-800 mb-2">📌 关键里程碑</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-red-500">●</span>GEO智能体上线·自动监控+策略生成</li><li class="flex items-center gap-2"><span class="text-red-500">●</span>AI线索智能识别·不错过商机</li><li class="flex items-center gap-2"><span class="text-red-500">●</span>营销数智化平台·流量归因+投流管理</li></ul></div>
+                </div>
+            </div>
+            <div class="quarter-goal-card bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-purple-500">
+                <div class="bg-purple-500 text-white px-6 py-4"><div class="flex items-center justify-between"><div><h3 class="text-xl font-bold">Q4 · 10-12月</h3><p class="text-purple-100 text-sm">生态构建 · 3个亮点工具</p></div><div class="text-3xl font-bold">13</div></div></div>
+                <div class="p-6">
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">🎯 季度目标</h4><p class="text-sm text-gray-600">优化系统体验，打造开发生态护城河；推出3个亮点AI工具</p></div>
+                    <div class="mb-4"><h4 class="font-semibold text-gray-800 mb-2">💎 本季亮点AI工具</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-purple-500">10月</span>小渔夫GEO·智能管家</li><li class="flex items-center gap-2"><span class="text-purple-500">11月</span>小渔夫AI·询盘智能回复</li><li class="flex items-center gap-2"><span class="text-purple-500">12月</span>小渔夫AI·爆文引擎</li></ul></div>
+                    <div><h4 class="font-semibold text-gray-800 mb-2">📌 关键里程碑</h4><ul class="space-y-1 text-sm"><li class="flex items-center gap-2"><span class="text-red-500">●</span>GEO智能体闭环·全自动品牌运营</li><li class="flex items-center gap-2"><span class="text-red-500">●</span>AI询盘智能回复·提升转化效率</li><li class="flex items-center gap-2"><span class="text-blue-500">●</span>开发者生态启动·插件市场+低代码</li></ul></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- 每月亮点 AI 工具 -->
+    <section class="max-w-7xl mx-auto px-6 py-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">💎 每月亮点 AI 工具发布计划</h2>
+        <p class="text-gray-600 mb-6">每月至少上线一个亮点 AI 工具，持续构建外贸 AI 产品矩阵<br><span class="text-sm text-gray-500">（涵盖 AI 建站、AI 内容生成、AI 图像处理、AI 营销、GEO/SEO 智能优化等全场景 AI 工具）</span></p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border-l-4 border-blue-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-blue-600">1月</span><span class="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">Q1</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·智能建站</h3>
+                <p class="text-xs text-gray-600 mb-2">0代码建站，5分钟上线专业外贸站</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">AI建站</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-5 border-l-4 border-purple-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-purple-600">2月</span><span class="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">Q1</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·图像生成</h3>
+                <p class="text-xs text-gray-600 mb-2">文字秒变商业级高清图，告别找图烦恼</p>
+                <div class="flex gap-1"><span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">P1</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">图像工具</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-5 border-l-4 border-amber-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-amber-600">3月</span><span class="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">Q1</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫GEO·AI品牌雷达</h3>
+                <p class="text-xs text-gray-600 mb-2">实时追踪AI大模型提及，掌控品牌话语权</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">GEO</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 border-l-4 border-green-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-green-600">4月</span><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">Q2</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·发布产品</h3>
+                <p class="text-xs text-gray-600 mb-2">1张图生成专业详情页，3分钟完成产品上架</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">AI内容</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-5 border-l-4 border-indigo-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-indigo-600">5月</span><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">Q2</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·PS修图大师</h3>
+                <p class="text-xs text-gray-600 mb-2">媲美专业设计师，图片瑕疵一键修复</p>
+                <div class="flex gap-1"><span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">P1</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">图像处理</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-5 border-l-4 border-pink-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-pink-600">6月</span><span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">Q2</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·社媒智能分发</h3>
+                <p class="text-xs text-gray-600 mb-2">一次创作，全平台分发，10倍提升社媒效率</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">AI内容</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border-l-4 border-yellow-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-yellow-600">7月</span><span class="text-xs bg-amber-500 text-white px-2 py-1 rounded-full">Q3</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫GEO·内容智造</h3>
+                <p class="text-xs text-gray-600 mb-2">AI自动创作SEO优质内容，排名提升看得见</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">GEO</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg p-5 border-l-4 border-teal-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-teal-600">8月</span><span class="text-xs bg-amber-500 text-white px-2 py-1 rounded-full">Q3</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·线索猎手</h3>
+                <p class="text-xs text-gray-600 mb-2">精准识别高价值询盘，不错过任何商机</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">AI营销</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-5 border-l-4 border-orange-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-orange-600">9月</span><span class="text-xs bg-amber-500 text-white px-2 py-1 rounded-full">Q3</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·社媒运营</h3>
+                <p class="text-xs text-gray-600 mb-2">对话即发布，让社媒运营像聊天一样简单</p>
+                <div class="flex gap-1"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">P2</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">AI内容</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-5 border-l-4 border-red-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-red-600">10月</span><span class="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">Q4</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫GEO·智能管家</h3>
+                <p class="text-xs text-gray-600 mb-2">7×24小时监控品牌声誉，自动应对危机</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">GEO</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg p-5 border-l-4 border-cyan-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-cyan-600">11月</span><span class="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">Q4</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·询盘智能回复</h3>
+                <p class="text-xs text-gray-600 mb-2">AI秒回专业询盘，智能提升转化效率</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">AI营销</span></div>
+            </div>
+            <div class="bg-gradient-to-br from-violet-50 to-violet-100 rounded-lg p-5 border-l-4 border-violet-500 hover:shadow-lg transition-all">
+                <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-violet-600">12月</span><span class="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">Q4</span></div>
+                <h3 class="font-bold text-gray-800 mb-1">小渔夫AI·爆文引擎</h3>
+                <p class="text-xs text-gray-600 mb-2">爆款内容批量生产，流量增长不再难</p>
+                <div class="flex gap-1"><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">P0</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">AI内容</span></div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Charts Row -->
+    <section class="max-w-7xl mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-lg p-6"><h3 class="text-lg font-bold text-gray-800 mb-4">优先级分布</h3><div class="h-64"><canvas id="priorityChart"></canvas></div></div>
+            <div class="bg-white rounded-xl shadow-lg p-6"><h3 class="text-lg font-bold text-gray-800 mb-4">负责人工作量（点击筛选）</h3><div class="h-64"><canvas id="ownerChart"></canvas></div></div>
+        </div>
+    </section>
+
+    <!-- Gantt Chart -->
+    <section class="max-w-7xl mx-auto px-6 py-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">需求甘特图（共86条）</h2>
+
+        <!-- Filter Controls -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <!-- 负责人筛选 -->
+            <div class="mb-6">
+                <p class="text-sm font-medium text-gray-600 mb-3">按负责人筛选（点击切换）：</p>
+                <div class="flex flex-wrap gap-3">
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-purple-500 bg-purple-50" data-owner="嘉劲" onclick="toggleOwnerFilter('嘉劲')">
+                        <div class="w-4 h-4 rounded bg-purple-500 mr-2"></div><span class="text-sm font-medium">嘉劲</span><span class="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">25</span>
+                    </div>
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-green-500 bg-green-50" data-owner="志锐" onclick="toggleOwnerFilter('志锐')">
+                        <div class="w-4 h-4 rounded bg-green-500 mr-2"></div><span class="text-sm font-medium">志锐</span><span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">18</span>
+                    </div>
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50" data-owner="潘永明" onclick="toggleOwnerFilter('潘永明')">
+                        <div class="w-4 h-4 rounded bg-blue-500 mr-2"></div><span class="text-sm font-medium">潘永明</span><span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">27</span>
+                    </div>
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-amber-500 bg-amber-50" data-owner="康丹" onclick="toggleOwnerFilter('康丹')">
+                        <div class="w-4 h-4 rounded bg-amber-500 mr-2"></div><span class="text-sm font-medium">康丹</span><span class="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">19</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 产品线筛选 -->
+            <div class="mb-4">
+                <p class="text-sm font-medium text-gray-600 mb-3">按产品线筛选（点击切换）：</p>
+                <div class="flex flex-wrap gap-3">
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50" data-line="装修" onclick="toggleLineFilter('装修')">
+                        <div class="w-4 h-4 rounded bg-blue-500 mr-2"></div><span class="text-sm font-medium">A-新版装修</span><span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">13</span>
+                    </div>
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-green-500 bg-green-50" data-line="后台" onclick="toggleLineFilter('后台')">
+                        <div class="w-4 h-4 rounded bg-green-500 mr-2"></div><span class="text-sm font-medium">B-云站后台</span><span class="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">17</span>
+                    </div>
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-purple-500 bg-purple-50" data-line="AI" onclick="toggleLineFilter('AI')">
+                        <div class="w-4 h-4 rounded bg-purple-500 mr-2"></div><span class="text-sm font-medium">C-AI工具</span><span class="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">50</span>
+                    </div>
+                    <div class="filter-chip active flex items-center px-4 py-2 rounded-lg border-2 border-pink-500 bg-pink-50" data-line="营销" onclick="toggleLineFilter('营销')">
+                        <div class="w-4 h-4 rounded bg-pink-500 mr-2"></div><span class="text-sm font-medium">D-营销系统</span><span class="ml-2 text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">9</span>
+                    </div>
+                    <button class="px-4 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-gray-200" onclick="resetAllFilters()">重置全部</button>
+                </div>
+            </div>
+
+            <div id="filterSummary" class="p-3 filter-summary rounded-lg hidden">
+                <span class="text-sm text-blue-800"><span class="font-medium">当前筛选：</span><span id="filterText">全部</span><span class="mx-2">·</span><span id="filterCount">86</span> 条需求</span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- 桌面端Tab -->
+            <div class="flex border-b border-gray-200 overflow-x-auto desktop-tabs">
+                <button onclick="showQuarter('all')" id="tab-all" class="px-6 py-4 text-sm font-medium text-gray-700 hover:text-blue-600 tab-active whitespace-nowrap">全部 (86)</button>
+                <button onclick="showQuarter('Q1')" id="tab-Q1" class="px-6 py-4 text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap">Q1 (27)</button>
+                <button onclick="showQuarter('Q2')" id="tab-Q2" class="px-6 py-4 text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap">Q2 (30)</button>
+                <button onclick="showQuarter('Q3')" id="tab-Q3" class="px-6 py-4 text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap">Q3 (24)</button>
+                <button onclick="showQuarter('Q4')" id="tab-Q4" class="px-6 py-4 text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap">Q4 (13)</button>
+            </div>
+            <!-- 移动端Tab下拉选择器 -->
+            <div class="mobile-tab-select p-4 border-b border-gray-200">
+                <select id="mobileQuarterSelect" onchange="showQuarter(this.value)">
+                    <option value="all">全部季度 (86条需求)</option>
+                    <option value="Q1">Q1 - 1-3月 (27条)</option>
+                    <option value="Q2">Q2 - 4-6月 (30条)</option>
+                    <option value="Q3">Q3 - 7-9月 (24条)</option>
+                    <option value="Q4">Q4 - 10-12月 (13条)</option>
+                </select>
+            </div>
+
+            <!-- 桌面端甘特图 -->
+            <div class="gantt-desktop">
+                <div style="display:grid; grid-template-columns: 4fr repeat(12, 1fr);" class="bg-gray-50 border-b border-gray-200 text-center sticky top-0 z-10">
+                    <div class="py-3 border-r border-gray-200 text-xs font-semibold text-gray-600">需求名称</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-blue-50">1月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-blue-50">2月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-blue-50">3月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-green-50">4月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-green-50">5月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-green-50">6月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-amber-50">7月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-amber-50">8月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-amber-50">9月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-purple-50">10月</div>
+                    <div class="py-3 border-r border-gray-200 text-xs text-gray-500 bg-purple-50">11月</div>
+                    <div class="py-3 text-xs text-gray-500 bg-purple-50">12月</div>
+                </div>
+                <div id="gantt-container" class="divide-y divide-gray-100 max-h-[700px] overflow-y-auto"></div>
+            </div>
+
+            <!-- 移动端卡片列表 -->
+            <div id="gantt-mobile-container" class="gantt-mobile p-4 bg-gray-50"></div>
+        </div>
+    </section>
+
+    <!-- 技术人员分配 -->
+    <section class="max-w-7xl mx-auto px-6 py-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">技术人员季度分配方案</h2>
+        <p class="text-sm text-gray-500 mb-4">点击下方产品线标签可筛选对应需求</p>
+
+        <div class="flex flex-wrap gap-3 mb-6">
+            <span class="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium cursor-pointer hover:bg-blue-200 transition-colors" onclick="selectOnlyLine('装修')">A-新版装修 (13)</span>
+            <span class="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium cursor-pointer hover:bg-green-200 transition-colors" onclick="selectOnlyLine('后台')">B-云站后台 (17)</span>
+            <span class="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium cursor-pointer hover:bg-purple-200 transition-colors" onclick="selectOnlyLine('AI')">C-AI工具 (50)</span>
+            <span class="px-4 py-2 bg-pink-100 text-pink-700 rounded-full text-sm font-medium cursor-pointer hover:bg-pink-200 transition-colors" onclick="selectOnlyLine('营销')">D-营销系统 (9)</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-blue-500 text-white px-4 py-3"><h3 class="font-bold">Q1 人员分配</h3><p class="text-blue-100 text-xs">夯实基础·装修迁移</p></div>
+                <div class="p-4">
+                    <div class="mb-4"><p class="text-xs text-gray-500 mb-2">前端 6人</p><div class="flex gap-1 h-6"><div class="bg-blue-500 rounded flex-grow-[2] cursor-pointer hover:opacity-80" title="装修2人" onclick="selectOnlyLine('装修')"></div><div class="bg-green-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" title="后台1人" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[3] cursor-pointer hover:opacity-80" title="AI3人" onclick="selectOnlyLine('AI')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[2]">2</span><span class="flex-grow-[1]">1</span><span class="flex-grow-[3]">3</span></div></div>
+                    <div><p class="text-xs text-gray-500 mb-2">后端 11人</p><div class="flex gap-1 h-6"><div class="bg-blue-500 rounded flex-grow-[2] cursor-pointer hover:opacity-80" title="装修2人" onclick="selectOnlyLine('装修')"></div><div class="bg-green-500 rounded flex-grow-[2] cursor-pointer hover:opacity-80" title="后台2人" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[6] cursor-pointer hover:opacity-80" title="AI6人" onclick="selectOnlyLine('AI')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[2]">2</span><span class="flex-grow-[2]">2</span><span class="flex-grow-[6]">6</span></div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-green-500 text-white px-4 py-3"><h3 class="font-bold">Q2 人员分配</h3><p class="text-green-100 text-xs">产品成熟·工具销售</p></div>
+                <div class="p-4">
+                    <div class="mb-4"><p class="text-xs text-gray-500 mb-2">前端 6人</p><div class="flex gap-1 h-6"><div class="bg-blue-500 rounded flex-grow-[2] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('装修')"></div><div class="bg-green-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[3] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('AI')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[2]">2</span><span class="flex-grow-[1]">1</span><span class="flex-grow-[3]">3</span></div></div>
+                    <div><p class="text-xs text-gray-500 mb-2">后端 11人</p><div class="flex gap-1 h-6"><div class="bg-blue-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('装修')"></div><div class="bg-green-500 rounded flex-grow-[3] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[6] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('AI')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[1]">1</span><span class="flex-grow-[3]">3</span><span class="flex-grow-[6]">6</span></div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-amber-500 text-white px-4 py-3"><h3 class="font-bold">Q3 人员分配</h3><p class="text-amber-100 text-xs">AI落地·营销启动</p></div>
+                <div class="p-4">
+                    <div class="mb-4"><p class="text-xs text-gray-500 mb-2">前端 6人</p><div class="flex gap-1 h-6"><div class="bg-blue-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('装修')"></div><div class="bg-green-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[3] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('AI')"></div><div class="bg-pink-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('营销')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[1]">1</span><span class="flex-grow-[1]">1</span><span class="flex-grow-[3]">3</span><span class="flex-grow-[1]">1</span></div></div>
+                    <div><p class="text-xs text-gray-500 mb-2">后端 11人</p><div class="flex gap-1 h-6"><div class="bg-blue-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('装修')"></div><div class="bg-green-500 rounded flex-grow-[2] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[6] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('AI')"></div><div class="bg-pink-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('营销')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[1]">1</span><span class="flex-grow-[2]">2</span><span class="flex-grow-[6]">6</span><span class="flex-grow-[1]">1</span></div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-purple-500 text-white px-4 py-3"><h3 class="font-bold">Q4 人员分配</h3><p class="text-purple-100 text-xs">生态构建·CRM重点</p></div>
+                <div class="p-4">
+                    <div class="mb-4"><p class="text-xs text-gray-500 mb-2">前端 6人</p><div class="flex gap-1 h-6"><div class="bg-green-500 rounded flex-grow-[2] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[3] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('AI')"></div><div class="bg-pink-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('营销')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[2]">2</span><span class="flex-grow-[3]">3</span><span class="flex-grow-[1]">1</span></div></div>
+                    <div><p class="text-xs text-gray-500 mb-2">后端 11人</p><div class="flex gap-1 h-6"><div class="bg-green-500 rounded flex-grow-[3] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('后台')"></div><div class="bg-purple-500 rounded flex-grow-[6] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('AI')"></div><div class="bg-pink-500 rounded flex-grow-[1] cursor-pointer hover:opacity-80" onclick="selectOnlyLine('营销')"></div></div><div class="flex text-xs mt-1 text-gray-500"><span class="flex-grow-[3]">3</span><span class="flex-grow-[6]">6</span><span class="flex-grow-[1]">1</span></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800">全年资源分布（人天）</h3>
+                <div class="text-sm text-gray-500">基于26人执行团队（1设计+1架构+6前端+11后端+7测试）·扣除法定假期·全年235个工作日·6110人天</div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><canvas id="resourceChart" height="200"></canvas></div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-purple-50 p-3 rounded-lg transition-all" onclick="selectOnlyLine('AI')">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-purple-500 rounded mr-3"></div>
+                            <div>
+                                <div class="text-sm font-medium">AI工具</div>
+                                <div class="text-xs text-gray-500">3385人天 · 50条需求</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-2"><div class="bg-purple-500 h-2 rounded-full" style="width:55.4%"></div></div>
+                            <span class="text-sm font-bold text-purple-600">55.4%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-green-50 p-3 rounded-lg transition-all" onclick="selectOnlyLine('后台')">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-green-500 rounded mr-3"></div>
+                            <div>
+                                <div class="text-sm font-medium">云站后台</div>
+                                <div class="text-xs text-gray-500">1283人天 · 17条需求</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-2"><div class="bg-green-500 h-2 rounded-full" style="width:21.1%"></div></div>
+                            <span class="text-sm font-bold text-green-600">21.1%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-blue-50 p-3 rounded-lg transition-all" onclick="selectOnlyLine('装修')">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-blue-500 rounded mr-3"></div>
+                            <div>
+                                <div class="text-sm font-medium">新版装修</div>
+                                <div class="text-xs text-gray-500">917人天 · 13条需求</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-2"><div class="bg-blue-500 h-2 rounded-full" style="width:15.1%"></div></div>
+                            <span class="text-sm font-bold text-blue-600">15.1%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-pink-50 p-3 rounded-lg transition-all" onclick="selectOnlyLine('营销')">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-pink-500 rounded mr-3"></div>
+                            <div>
+                                <div class="text-sm font-medium">营销系统</div>
+                                <div class="text-xs text-gray-500">525人天 · 9条需求</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-2"><div class="bg-pink-500 h-2 rounded-full" style="width:8.6%"></div></div>
+                            <span class="text-sm font-bold text-pink-600">8.6%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细季度数据分析 -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">📊 季度资源投入详情（人天）</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div class="bg-blue-50 rounded-lg p-3">
+                        <div class="font-bold text-blue-700 mb-2">Q1（1-3月·58个工作日）</div>
+                        <div class="space-y-1 text-gray-600">
+                            <div class="flex justify-between"><span>装修</span><span class="font-medium text-blue-600">385天</span></div>
+                            <div class="flex justify-between"><span>后台</span><span class="font-medium">285天</span></div>
+                            <div class="flex justify-between"><span>AI</span><span class="font-medium text-purple-600">838天</span></div>
+                            <div class="flex justify-between"><span>营销</span><span class="font-medium">0天</span></div>
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold">合计</span><span class="font-bold">1508天</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3">
+                        <div class="font-bold text-green-700 mb-2">Q2（4-6月·55个工作日）</div>
+                        <div class="space-y-1 text-gray-600">
+                            <div class="flex justify-between"><span>装修</span><span class="font-medium">272天</span></div>
+                            <div class="flex justify-between"><span>后台</span><span class="font-medium">338天</span></div>
+                            <div class="flex justify-between"><span>AI</span><span class="font-medium text-purple-600">745天</span></div>
+                            <div class="flex justify-between"><span>营销</span><span class="font-medium">75天</span></div>
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold">合计</span><span class="font-bold">1430天</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 rounded-lg p-3">
+                        <div class="font-bold text-amber-700 mb-2">Q3（7-9月·63个工作日）</div>
+                        <div class="space-y-1 text-gray-600">
+                            <div class="flex justify-between"><span>装修</span><span class="font-medium">187天</span></div>
+                            <div class="flex justify-between"><span>后台</span><span class="font-medium">311天</span></div>
+                            <div class="flex justify-between"><span>AI</span><span class="font-medium text-purple-600">873天</span></div>
+                            <div class="flex justify-between"><span>营销</span><span class="font-medium text-pink-600">267天</span></div>
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold">合计</span><span class="font-bold">1638天</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-3">
+                        <div class="font-bold text-purple-700 mb-2">Q4（10-12月·59个工作日）</div>
+                        <div class="space-y-1 text-gray-600">
+                            <div class="flex justify-between"><span>装修</span><span class="font-medium">73天</span></div>
+                            <div class="flex justify-between"><span>后台</span><span class="font-medium text-green-600">349天</span></div>
+                            <div class="flex justify-between"><span>AI</span><span class="font-medium text-purple-600">929天</span></div>
+                            <div class="flex justify-between"><span>营销</span><span class="font-medium text-pink-600">183天</span></div>
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold">合计</span><span class="font-bold">1534天</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关键洞察 -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">💡 资源配置关键洞察</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-purple-50 border-l-3 border-purple-500 rounded p-3">
+                        <div class="font-bold text-purple-800 mb-1">AI战略聚焦·执行层深度投入</div>
+                        <p class="text-gray-700">全年投入3385人天（55.4%），覆盖设计、开发、测试全流程。Q4达到峰值929人天，体现"AI优先"战略。3名AI专项开发深度投入，人均需求68人天/条，复杂度远超其他产品线。</p>
+                    </div>
+                    <div class="bg-green-50 border-l-3 border-green-500 rounded p-3">
+                        <div class="font-bold text-green-800 mb-1">执行团队·季度均衡</div>
+                        <p class="text-gray-700">基于26人执行团队，扣除法定假期后各季度工作日不同：Q1（58天·1508人天）、Q2（55天·1430人天）、Q3（63天·1638人天）、Q4（59天·1534人天），涵盖UI设计、架构、开发、测试全链路。Q1-Q2基础建设期（装修+后台占44%），Q3-Q4生态构建期（营销系统从0%升至12%）。装修线逐季递减（385→272→187→73），符合迁移后维护规律。</p>
+                    </div>
+                    <div class="bg-amber-50 border-l-3 border-amber-500 rounded p-3">
+                        <div class="font-bold text-amber-800 mb-1">CRM重点·渐进发力</div>
+                        <p class="text-gray-700">营销系统Q1暂缓（0人天），Q2试点（75人天），Q3铺开（267人天），Q4深化（183人天）。后台系统Q4加码至349人天，主攻CRM与插件市场。设计1人+架构1人+测试7人+开发17人=26人执行团队，确保高质量交付。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="max-w-7xl mx-auto px-6 py-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">团队资源配置与合理性分析</h2>
+
+        <!-- 合理性分析仪表盘 -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">📊 资源配置合理性评估</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600">负载均衡度</span>
+                        <span class="text-2xl font-bold text-green-600">88%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 88%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">产品经理工作量分配较均衡（18-27条）</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600">人力利用率</span>
+                        <span class="text-2xl font-bold text-green-600">100%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">26人执行团队满负荷协同运转</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600">优先级匹配</span>
+                        <span class="text-2xl font-bold text-green-600">92%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: 92%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">P0需求资源投入充足（37条占43%）</p>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600">风险系数</span>
+                        <span class="text-2xl font-bold text-amber-600">中</span>
+                    </div>
+                    <div class="flex gap-1 mt-2">
+                        <div class="flex-1 bg-green-200 h-2 rounded"></div>
+                        <div class="flex-1 bg-amber-200 h-2 rounded"></div>
+                        <div class="flex-1 bg-gray-200 h-2 rounded"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">需关注Q1-Q2装修迁移关键节点</p>
+                </div>
+            </div>
+
+            <!-- 关键发现 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-green-50 border-l-4 border-green-500 rounded p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-green-600 text-xl">✓</span>
+                        <h4 class="font-bold text-green-800">优势</h4>
+                    </div>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• AI战略聚焦清晰（58%需求+55%人力）</li>
+                        <li>• 优先级管理得当（P0占43%需求）</li>
+                        <li>• 季度节奏合理（扣除法定假期，各季1430-1638人天）</li>
+                        <li>• 技术栈适配（前后端3:5比例）</li>
+                        <li>• AI专项团队（3人全年深度投入）</li>
+                    </ul>
+                </div>
+                <div class="bg-amber-50 border-l-4 border-amber-500 rounded p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-amber-600 text-xl">⚠</span>
+                        <h4 class="font-bold text-amber-800">风险点</h4>
+                    </div>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• 潘永明负载最高（27条，占31%）</li>
+                        <li>• Q1-Q2连续高峰（占全年需求66%）</li>
+                        <li>• AI线技术复杂度高（跨多领域）</li>
+                        <li>• 嘉劲25条GEO需求集中度高</li>
+                        <li>• 26人执行团队满负荷（无弹性储备）</li>
+                        <li>• 测试团队8人需覆盖86条需求</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 border-l-4 border-blue-500 rounded p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-blue-600 text-xl">💡</span>
+                        <h4 class="font-bold text-blue-800">建议</h4>
+                    </div>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• Q1-Q2加强潘永明/嘉劲任务分解</li>
+                        <li>• AI线细分GEO/内容/图像三子团队</li>
+                        <li>• 建立5%弹性资源池应对突发需求</li>
+                        <li>• P2需求缓冲，优先保障P0交付</li>
+                        <li>• 关键人员配备技术助理降低风险</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 原有团队配置卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center mb-4"><div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">📋</div><div><h3 class="font-bold text-lg">产品团队</h3><p class="text-gray-500 text-sm">5人</p></div></div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50"><span class="text-sm font-medium">潘永明</span><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">产品负责人</span></div>
+                    <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50 cursor-pointer" onclick="toggleOwnerFilter('志锐')"><span class="text-sm">志锐</span><span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">18条·装修</span></div>
+                    <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50 cursor-pointer" onclick="toggleOwnerFilter('嘉劲')"><span class="text-sm">嘉劲</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">25条·GEO</span></div>
+                    <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50 cursor-pointer" onclick="toggleOwnerFilter('康丹')"><span class="text-sm">康丹</span><span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">19条·工具</span></div>
+                    <div class="flex items-center justify-between p-2 rounded hover:bg-gray-50"><span class="text-sm">李元儿</span><span class="text-xs bg-gray-100 px-2 py-1 rounded-full">UI设计</span></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center mb-4"><div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">💻</div><div><h3 class="font-bold text-lg">技术团队</h3><p class="text-gray-500 text-sm">18人</p></div></div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2"><span class="text-sm font-medium">尹军</span><span class="text-xs bg-gray-100 px-2 py-1 rounded-full">技术总监</span></div>
+                    <div class="flex items-center justify-between p-2"><span class="text-sm">王加楠</span><span class="text-xs bg-gray-100 px-2 py-1 rounded-full">架构师</span></div>
+                    <div class="flex items-center justify-between p-2"><span class="text-sm">詹焕城</span><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">前端负责人</span></div>
+                    <div class="p-2 bg-blue-50 rounded text-xs text-gray-600"><span class="font-medium">前端5人：</span>黄嘉明、陈宏业、雷觉晓、齐林河、黄凯达</div>
+                    <div class="flex items-center justify-between p-2"><span class="text-sm">董卓侦</span><span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">后端负责人</span></div>
+                    <div class="p-2 bg-green-50 rounded text-xs text-gray-600"><span class="font-medium">后端7人：</span>高文浩、陈基灶、陈哲律、冯世奋、吴文宝、陈燕东、麦小海</div>
+                    <div class="p-2 bg-purple-50 rounded text-xs text-gray-600"><span class="font-medium">AI开发3人：</span>陈玉言、卢家乐、锦城</div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center mb-4"><div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mr-3">🔍</div><div><h3 class="font-bold text-lg">测试团队</h3><p class="text-gray-500 text-sm">8人</p></div></div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2"><span class="text-sm font-medium">欧文辉</span><span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">测试负责人</span></div>
+                    <div class="p-3 bg-gray-50 rounded-lg text-xs text-gray-600">陈俊霖、艾娟、覃靖钦、李珊、韩舒婷、李惠、潘启浩</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-800 text-white py-6 text-center">
+        <p class="text-gray-400">小渔夫产品技术团队 · 2026年度开发计划</p>
+        <p class="text-gray-500 text-sm mt-1">更新于 2026-02-02 · 支持负责人+产品线双维度筛选 · 共86条需求</p>
+    </footer>
+
+    <script>
+        // 需求数据（完全基于需求清单文件）
+        const requirements = [
+            { id: 1, name: "工具产品商业化销售体系搭建", priority: "P0", owner: "嘉劲", line: "营销", quarters: ["Q2","Q3"], startMonth: 4, endMonth: 9, desc: "搭建销售团队、建立销售流程、制定激励机制" },
+            { id: 2, name: "基于自动化品牌声誉推荐策略一键生成多模态GEO内容", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "GEO内容生成Agent,自动生成GEO策略内容" },
+            { id: 3, name: "装修系统配置交互优化与设计反馈闭环", priority: "P0", owner: "志锐", line: "装修", quarters: ["Q1","Q2"], startMonth: 1, endMonth: 6, desc: "修复设计反馈80条、统一装修模块配置入口" },
+            { id: 4, name: "小渔AI-新增发布社媒", priority: "P2", owner: "志锐", line: "AI", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "在小渔AI对话生成内容并发布到多社媒平台" },
+            { id: 5, name: "多端消息推送系统完善", priority: "P2", owner: "康丹", line: "后台", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "支持多端消息实时触达、用户级推送开关控制" },
+            { id: 6, name: "装修系统选项卡组件统一化与嵌套支持", priority: "P0", owner: "潘永明", line: "装修", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "选项卡技术统一化、标签页交互响应优化、多级装修模块嵌套支持" },
+            { id: 7, name: "新版-产品详情可视化功能", priority: "P0", owner: "潘永明", line: "装修", quarters: ["Q1","Q2"], startMonth: 1, endMonth: 6, desc: "支持产品详情新版可视化编辑" },
+            { id: 8, name: "新版-文章详情可视化功能", priority: "P0", owner: "康丹", line: "装修", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持文章内容新版可视化编辑" },
+            { id: 9, name: "新版装修框架迁移与兼容性保障", priority: "P0", owner: "志锐", line: "装修", quarters: ["Q1","Q2"], startMonth: 1, endMonth: 6, desc: "迁移旧版组件至新版框架、统一组件API与渲染逻辑" },
+            { id: 10, name: "小渔AI智能建站一站式闭环", priority: "P0", owner: "潘永明", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "AI自动生成网页内容、企业信息智能表单构建、一键部署建站流程" },
+            { id: 11, name: "小渔AI智能产品发布工具", priority: "P0", owner: "潘永明", line: "AI", quarters: ["Q1","Q2"], startMonth: 1, endMonth: 6, desc: "AI生成产品内容与产品详情页" },
+            { id: 12, name: "小渔AI智能文章发布工具", priority: "P0", owner: "康丹", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持AI Agent自主发布文章" },
+            { id: 13, name: "小渔AI-支持文生图", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "支持中文自然语言生成图像" },
+            { id: 14, name: "小渔AI-支持图生图", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "支持上传图片生成新图" },
+            { id: 15, name: "小渔AI-支持图片精修", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持上传多格式图片、提供AI驱动精修功能" },
+            { id: 16, name: "小渔AI-支持去水印", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "消除水印干扰" },
+            { id: 17, name: "小渔AI-支持抠图", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持智能人像/物体检出、一键透明背景生成" },
+            { id: 18, name: "图片精修-新增支持更多材质的图片", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持珠宝材质智能精修、塑料材质高光还原、布料纹理真实增强" },
+            { id: 19, name: "新版装修，新增动效配置", priority: "P2", owner: "志锐", line: "装修", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持模块级动效配置、支持组件级动效配置" },
+            { id: 20, name: "小渔AI-SEO智能诊断与优化建议", priority: "P1", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持小渔夫站点SEO与性能诊断、自动生成优化建议报告" },
+            { id: 21, name: "新增投影样式", priority: "P2", owner: "志锐", line: "装修", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持新增投影样式配置、提供投影样式预览功能" },
+            { id: 22, name: "按钮组件图标与文字拆分", priority: "P0", owner: "志锐", line: "装修", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "图标与文字支持独立配置、支持图标与文字水平/垂直布局" },
+            { id: 23, name: "新增发布配色方案", priority: "P2", owner: "潘永明", line: "装修", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持多色系配色方案创建、提供可视化配色预览界面" },
+            { id: 24, name: "资源页面-新增文章模块与详情", priority: "P2", owner: "志锐", line: "装修", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持文章模块新增入口、实现文章详情页独立展示" },
+            { id: 25, name: "资源页面-新增产品模块与详情", priority: "P2", owner: "志锐", line: "装修", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持新增产品模块配置、实现产品详情页动态渲染" },
+            { id: 26, name: "资源页面-新增发布帖子功能", priority: "P2", owner: "志锐", line: "后台", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持用户发布新帖、新增独立帖子模块" },
+            { id: 27, name: "资源页面-新增FAQ模块", priority: "P2", owner: "志锐", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持FAQ模块独立新增、FAQ内容可在线编辑管理" },
+            { id: 28, name: "资源页面-新增下载模块", priority: "P2", owner: "志锐", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持资源文件一键下载、下载模块嵌入资源页面" },
+            { id: 29, name: "资源页面-新增品牌相册模块", priority: "P2", owner: "志锐", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持品牌相册独立展示、提供相册分类与标签管理" },
+            { id: 30, name: "社媒运营协作平台体验优化", priority: "P2", owner: "志锐", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "优化发布流程一键多平台同步、增强评论/私信聚合响应能力" },
+            { id: 31, name: "AI知识库与素材库融合体系", priority: "P2", owner: "康丹", line: "AI", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "实现素材库与知识库双向同步、支持语义级标签自动映射" },
+            { id: 32, name: "广告素材库与投流策略管理平台", priority: "P0", owner: "嘉劲", line: "营销", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "支持多格式广告素材上传管理、实现投流策略可视化配置" },
+            { id: 33, name: "运营管理平台数据看板与决策分析", priority: "P1", owner: "潘永明", line: "营销", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "构建统一数据看板、支持多维运营分析" },
+            { id: 34, name: "云站数据智能分析平台", priority: "P1", owner: "潘永明", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "实现多源数据统一接入、支持实时与离线分析双模" },
+            { id: 35, name: "SEO 智能诊断【AI 自动监测关键词排名变化】", priority: "P1", owner: "嘉劲", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "自动监测关键词实时排名、AI识别排名异常波动原因" },
+            { id: 36, name: "官网下单与工具套餐购买体验优化", priority: "P0", owner: "潘永明", line: "营销", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "提升官网下单流程转化率、统一工具套餐展示与配置逻辑" },
+            { id: 37, name: "全链路业务数据统一分析平台", priority: "P1", owner: "康丹", line: "营销", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "覆盖数据采集到分析全链路、支持跨系统跨层级数据打通" },
+            { id: 38, name: "全域流量实时监控与归因分析", priority: "P1", owner: "潘永明", line: "营销", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持全域流量数据聚合、实现多平台实时可视化" },
+            { id: 39, name: "AI智能线索识别与管理", priority: "P0", owner: "康丹", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "实现AI自动识别询盘线索、支持多渠道线索统一接入" },
+            { id: 40, name: "AI智能询盘自动回复", priority: "P0", owner: "康丹", line: "AI", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "支持多轮AI询盘理解、自动生成专业回复文案" },
+            { id: 41, name: "云站后台多角色权限与协作优化", priority: "P2", owner: "潘永明", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持文档在线实时编辑、实现多角色权限分级管控" },
+            { id: 42, name: "产品文档规范建设与知识体系化", priority: "P1", owner: "潘永明", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "统一文档结构模板、明确各角色编写职责" },
+            { id: 43, name: "云站后台使用文档建设", priority: "P1", owner: "康丹", line: "后台", quarters: ["Q1","Q2","Q3"], startMonth: 1, endMonth: 9, desc: "支持文档在线实时编辑、实现多角色权限分级管控" },
+            { id: 44, name: "增值工具转化路径优化", priority: "P0", owner: "康丹", line: "后台", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "优化工具触发逻辑、统一增值入口路径" },
+            { id: 45, name: "小渔AI-新增图生视频", priority: "P2", owner: "康丹", line: "AI", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持图片输入生成视频、保留原图主体与风格" },
+            { id: 46, name: "中控客户列表与订单模块优化", priority: "P1", owner: "康丹", line: "营销", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "客户数据迁移至小渔夫、订单流程集成小渔夫平台" },
+            { id: 47, name: "工具产品客户支持服务体系", priority: "P0", owner: "康丹", line: "后台", quarters: ["Q1","Q2"], startMonth: 1, endMonth: 6, desc: "构建客户专属工具平台、支持团队协同配置管理" },
+            { id: 48, name: "小渔AI数字人视频智能生成", priority: "P2", owner: "康丹", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持数字人视频生成、集成多模态驱动能力" },
+            { id: 49, name: "短视频爆款模板智能生成与一键发布", priority: "P2", owner: "康丹", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持爆款视频模板一键套用、自动匹配AI生成脚本与画面" },
+            { id: 50, name: "小渔AI智能配色推荐", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "支持AI自动生成配色方案、提供多风格配色推荐" },
+            { id: 51, name: "小渔AI文生视频", priority: "P2", owner: "康丹", line: "AI", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "支持文本一键生成视频、提供多风格视频模板" },
+            { id: 52, name: "AI模型成本分析与精细化运营", priority: "P2", owner: "潘永明", line: "营销", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "分析各AI模型调用量分布、识别高消耗模型及场景" },
+            { id: 53, name: "后台移动端适配与轻量化管理", priority: "P2", owner: "康丹", line: "后台", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "适配主流手机屏幕尺寸、提供轻量级管理操作入口" },
+            { id: 54, name: "小渔夫客户管理与销售协作平台", priority: "P0", owner: "潘永明", line: "营销", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "客户信息统一归集管理、销售过程可视化追踪" },
+            { id: 55, name: "智能体工作流低代码编排能力", priority: "P2", owner: "潘永明", line: "后台", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "支持节点类型动态扩展、允许节点参数自由编排" },
+            { id: 56, name: "SaaS总后台多站点管理与权限体系优化", priority: "P2", owner: "潘永明", line: "后台", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "优化多站点管理逻辑、提升SaaS总后台响应速度与稳定性" },
+            { id: 57, name: "小渔夫插件市场与开发者生态体系", priority: "P2", owner: "潘永明", line: "后台", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "建设插件市场统一门户、制定插件上架审核规范" },
+            { id: 58, name: "AI 装修模块技术规范与组件库建设", priority: "P1", owner: "志锐", line: "装修", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "明确装修模块技术规范、输出可复用组件文档" },
+            { id: 59, name: "存量用户新版迁移与SEO权重继承", priority: "P1", owner: "志锐", line: "装修", quarters: ["Q4"], startMonth: 10, endMonth: 12, desc: "开发一键迁移插件、自动映射旧版数据到新版架构" },
+            { id: 60, name: "代运营权限体系与风险管控", priority: "P1", owner: "志锐", line: "后台", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "明确代运营角色权限边界、支持多级权限动态配置" },
+            { id: 61, name: "AI高质量文章Agent", priority: "P0", owner: "志锐", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "支持多源高质量内容生成、内置专业领域知识校验机制" },
+            { id: 62, name: "AI建站页面风格智能匹配", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持AI自动匹配页面风格、提供多风格模板预览能力" },
+            { id: 63, name: "AI语音交互与智能建站助手", priority: "P1", owner: "潘永明", line: "AI", quarters: ["Q3"], startMonth: 7, endMonth: 9, desc: "支持语音输入对话交互、一键更换网站主题配色" },
+            { id: 64, name: "新增多大模型监控支持(GPT/Gemini等)", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "全面拓展大模型监控范围支持至少5个大模型(ChatGPT、谷歌AI、Gemini、Perplexity等)" },
+            { id: 65, name: "新增prompts数量管理", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "支持不同站点等级配置不同数量的提示词" },
+            { id: 66, name: "新增prompts同时支持多地区监控", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "支持配置全球或美国、日本、韩国、英国等主流国家" },
+            { id: 67, name: "新增竞品管理模块", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "可随时配置竞品信息" },
+            { id: 68, name: "新增竞品一键分析能力", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "支持prompts提及引用次数及频率等数据维度分析横向对比" },
+            { id: 69, name: "新增竞品追踪监控能力", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "支持竞品对比动态跟踪预警（如排名下降等）" },
+            { id: 70, name: "构建品牌定位监控能力", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "监控LLM回答质量(是否有误、是否正确引用)、是否偏离品牌意图" },
+            { id: 71, name: "构建品牌情绪监控能力", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "监控LLM内容情绪分析(正面/中性/负面)" },
+            { id: 72, name: "品牌风险预警机制", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q1","Q2"], startMonth: 1, endMonth: 6, desc: "监控LLM回答品牌负面或错误描述信息时溯源定位引用源头" },
+            { id: 73, name: "搭建GEO监控系统分析", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "prompts内容信息进行识别、评估及打标分析，生成线索数据" },
+            { id: 74, name: "询盘信息评估模型（关键信息）", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "构建AI提及引用数据+Agent线索库+线索质量数据分析" },
+            { id: 75, name: "搭建AI-Lead线索库", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "通过分析prompts+询盘识别，打造AI专属线索库" },
+            { id: 76, name: "构建线索内容策略推荐", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "基于线索行为和来源提供GEO策略推荐" },
+            { id: 77, name: "搭建GEO专属内容生成智能体", priority: "P1", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "打造高质量内容创作·支持多种文章类型和FAQ等文章内容生成" },
+            { id: 78, name: "打造行业垂类专业化模型", priority: "P1", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "整合权威数据和各类型文章训练" },
+            { id: 79, name: "提升GEO高质量内容评分机制", priority: "P1", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "打造权威外链聚合系统，支持高权威外链自动发布能力" },
+            { id: 80, name: "对接专业外链聚合平台", priority: "P1", owner: "嘉劲", line: "AI", quarters: ["Q1"], startMonth: 1, endMonth: 3, desc: "实现跨平台外链发布能力" },
+            { id: 81, name: "专业博客、论坛等自动化发布脚本", priority: "P1", owner: "嘉劲", line: "AI", quarters: ["Q2"], startMonth: 4, endMonth: 6, desc: "实现专业文章跨平台自动发布" },
+            { id: 82, name: "构建自动化品牌声誉监控智能体", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "对LLM回答内容自动化分析，当负面情绪时及时通知相关团队" },
+            { id: 83, name: "智能自动化GEO 策略", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "根据情绪趋势自动生成内容策略推荐" },
+            { id: 84, name: "搭建动态归因模型", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "定期分析流量趋势和询盘数据与AI提及引用关联性" },
+            { id: 85, name: "基于自动化策略批量生成prompts计划", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "管理员可以一键执行计划" },
+            { id: 86, name: "构建自动化GEO智能体", priority: "P0", owner: "嘉劲", line: "AI", quarters: ["Q3","Q4"], startMonth: 7, endMonth: 12, desc: "通过智能体规则预设，实现自动化生成prompt→评估→检测提及引用→生成优化策略→生成高质量内容→自动化发布" }
+        ];
+
+        // 状态
+        let currentQuarter = 'all';
+        let activeOwners = new Set(['嘉劲', '志锐', '潘永明', '康丹']);
+        let activeLines = new Set(['装修', '后台', 'AI', '营销']);
+
+        const lineColors = { '装修': '#3b82f6', '后台': '#10b981', 'AI': '#8b5cf6', 'GEO': '#f59e0b', '营销': '#ec4899' };
+
+        document.addEventListener('DOMContentLoaded', function() { updateLineFilterCounts(); updateOwnerFilterCounts(); renderGantt(); initCharts(); });
+
+        function renderGantt() {
+            const container = document.getElementById('gantt-container');
+            const mobileContainer = document.getElementById('gantt-mobile-container');
+            container.innerHTML = '';
+            mobileContainer.innerHTML = '';
+
+            const filteredReqs = requirements.filter(req => {
+                const quarterMatch = currentQuarter === 'all' || req.quarters.includes(currentQuarter);
+                const ownerMatch = activeOwners.has(req.owner);
+                const lineMatch = activeLines.has(req.line);
+                return quarterMatch && ownerMatch && lineMatch;
+            });
+            filteredReqs.sort((a, b) => { if (a.startMonth !== b.startMonth) return a.startMonth - b.startMonth; return { 'P0': 0, 'P1': 1, 'P2': 2 }[a.priority] - { 'P0': 0, 'P1': 1, 'P2': 2 }[b.priority]; });
+
+            // 桌面端渲染
+            filteredReqs.forEach(req => {
+                const row = document.createElement('div');
+                row.className = 'gantt-row';
+                const grid = document.createElement('div');
+                grid.className = 'items-center hover:bg-gray-50 transition-colors';
+                grid.style.cssText = 'display:grid; grid-template-columns: 4fr repeat(12, 1fr);';
+                const nameCell = document.createElement('div');
+                nameCell.className = 'py-3 px-4 flex items-center gap-2 border-r border-gray-100';
+                nameCell.style.borderLeftColor = lineColors[req.line];
+                nameCell.style.borderLeftWidth = '4px';
+                const badge = document.createElement('span');
+                badge.className = 'priority-badge priority-' + req.priority;
+                badge.textContent = req.priority;
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'text-sm truncate flex-1';
+                nameSpan.title = req.name;
+                nameSpan.textContent = req.name;
+                nameCell.appendChild(badge);
+                nameCell.appendChild(nameSpan);
+                grid.appendChild(nameCell);
+                for (let month = 1; month <= 12; month++) {
+                    const monthCell = document.createElement('div');
+                    monthCell.className = 'py-3 px-0.5 border-r border-gray-50';
+                    if (month >= req.startMonth && month <= req.endMonth) {
+                        const bar = document.createElement('div');
+                        bar.className = 'gantt-bar h-7 rounded owner-' + req.owner;
+                        bar.style.opacity = '0.85';
+                        bar.addEventListener('mouseenter', (e) => showTooltip(e, req));
+                        bar.addEventListener('mouseleave', hideTooltip);
+                        bar.addEventListener('mousemove', moveTooltip);
+                        monthCell.appendChild(bar);
+                    }
+                    grid.appendChild(monthCell);
+                }
+                row.appendChild(grid);
+                container.appendChild(row);
+            });
+
+            // 移动端渲染 - 卡片列表
+            filteredReqs.forEach(req => {
+                const card = document.createElement('div');
+                card.className = 'mobile-card';
+                card.style.borderLeftColor = lineColors[req.line];
+                card.onclick = () => showMobileModal(req);
+
+                const header = document.createElement('div');
+                header.className = 'mobile-card-header';
+
+                const title = document.createElement('div');
+                title.className = 'mobile-card-title';
+                title.textContent = req.name;
+
+                const priorityBadge = document.createElement('span');
+                priorityBadge.className = 'mobile-card-badge priority-' + req.priority;
+                priorityBadge.style.background = req.priority === 'P0' ? '#fef2f2' : req.priority === 'P1' ? '#fffbeb' : '#eff6ff';
+                priorityBadge.style.color = req.priority === 'P0' ? '#dc2626' : req.priority === 'P1' ? '#d97706' : '#2563eb';
+                priorityBadge.textContent = req.priority;
+
+                header.appendChild(title);
+                header.appendChild(priorityBadge);
+
+                const meta = document.createElement('div');
+                meta.className = 'mobile-card-meta';
+                meta.innerHTML = `
+                    <span style="background:${lineColors[req.line]};color:white;padding:2px 8px;border-radius:4px;">${req.line}</span>
+                    <span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:4px;">${req.owner}</span>
+                    <span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:4px;">${req.startMonth}月-${req.endMonth}月</span>
+                `;
+
+                card.appendChild(header);
+                card.appendChild(meta);
+                mobileContainer.appendChild(card);
+            });
+
+            updateFilterSummary(filteredReqs.length);
+        }
+
+        // 移动端模态框
+        function showMobileModal(req) {
+            const modal = document.getElementById('mobileModal');
+            const body = document.getElementById('modalBody');
+            body.innerHTML = `
+                <div style="margin-bottom:16px;">
+                    <div style="font-size:18px;font-weight:600;color:#1f2937;margin-bottom:12px;line-height:1.4;">${req.name}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                        <span class="priority-badge priority-${req.priority}">${req.priority}</span>
+                        <span style="background:${lineColors[req.line]};color:white;padding:4px 10px;border-radius:6px;font-size:13px;">${req.line}</span>
+                        <span style="background:#f3f4f6;color:#374151;padding:4px 10px;border-radius:6px;font-size:13px;">负责人：${req.owner}</span>
+                    </div>
+                </div>
+                <div style="background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px;">
+                    <div style="font-size:13px;color:#6b7280;margin-bottom:4px;">执行周期</div>
+                    <div style="font-size:16px;font-weight:500;color:#1f2937;">${req.startMonth}月 - ${req.endMonth}月 (${req.endMonth - req.startMonth + 1}个月)</div>
+                </div>
+                <div style="background:#f9fafb;border-radius:12px;padding:16px;">
+                    <div style="font-size:13px;color:#6b7280;margin-bottom:8px;">需求描述</div>
+                    <div style="font-size:14px;color:#374151;line-height:1.6;">${req.desc}</div>
+                </div>
+            `;
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            const modal = document.getElementById('mobileModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function showQuarter(quarter) {
+            currentQuarter = quarter;
+            // 更新桌面端Tab
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => tab.classList.remove('tab-active'));
+            document.getElementById('tab-' + quarter).classList.add('tab-active');
+            // 更新移动端下拉
+            document.getElementById('mobileQuarterSelect').value = quarter;
+            renderGantt();
+        }
+
+        function toggleOwnerFilter(owner) {
+            const filterEl = document.querySelector('.filter-chip[data-owner="' + owner + '"]');
+            if (activeOwners.has(owner)) { if (activeOwners.size > 1) { activeOwners.delete(owner); filterEl.classList.remove('active'); filterEl.classList.add('inactive'); } }
+            else { activeOwners.add(owner); filterEl.classList.add('active'); filterEl.classList.remove('inactive'); }
+            updateLineFilterCounts();
+            renderGantt();
+        }
+
+        function updateLineFilterCounts() {
+            const lines = ['装修', '后台', 'AI', '营销'];
+            lines.forEach(line => {
+                const count = requirements.filter(req => activeOwners.has(req.owner) && req.line === line).length;
+                const filterEl = document.querySelector('.filter-chip[data-line="' + line + '"]');
+                const badge = filterEl.querySelector('span:last-child');
+                badge.textContent = count;
+            });
+        }
+
+        function updateOwnerFilterCounts() {
+            const owners = ['嘉劲', '志锐', '潘永明', '康丹'];
+            owners.forEach(owner => {
+                const count = requirements.filter(req => activeLines.has(req.line) && req.owner === owner).length;
+                const filterEl = document.querySelector('.filter-chip[data-owner="' + owner + '"]');
+                const badge = filterEl.querySelector('span:last-child');
+                badge.textContent = count;
+            });
+        }
+
+        function toggleLineFilter(line) {
+            const filterEl = document.querySelector('.filter-chip[data-line="' + line + '"]');
+            if (activeLines.has(line)) { if (activeLines.size > 1) { activeLines.delete(line); filterEl.classList.remove('active'); filterEl.classList.add('inactive'); } }
+            else { activeLines.add(line); filterEl.classList.add('active'); filterEl.classList.remove('inactive'); }
+            updateOwnerFilterCounts();
+            renderGantt();
+        }
+
+        function selectOnlyLine(line) {
+            activeLines = new Set([line]);
+            document.querySelectorAll('.filter-chip[data-line]').forEach(el => {
+                if (el.dataset.line === line) { el.classList.add('active'); el.classList.remove('inactive'); }
+                else { el.classList.remove('active'); el.classList.add('inactive'); }
+            });
+            updateOwnerFilterCounts();
+            renderGantt();
+            document.getElementById('gantt-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetAllFilters() {
+            activeOwners = new Set(['嘉劲', '志锐', '潘永明', '康丹']);
+            activeLines = new Set(['装修', '后台', 'AI', '营销']);
+            document.querySelectorAll('.filter-chip').forEach(el => { el.classList.add('active'); el.classList.remove('inactive'); });
+            updateLineFilterCounts();
+            updateOwnerFilterCounts();
+            renderGantt();
+        }
+
+        function updateFilterSummary(count) {
+            const summary = document.getElementById('filterSummary');
+            const filterText = document.getElementById('filterText');
+            const filterCount = document.getElementById('filterCount');
+            const allOwners = activeOwners.size === 4;
+            const allLines = activeLines.size === 4;
+            if (allOwners && allLines && currentQuarter === 'all') { summary.classList.add('hidden'); }
+            else {
+                summary.classList.remove('hidden');
+                let parts = [];
+                if (!allOwners) parts.push('负责人: ' + Array.from(activeOwners).join('、'));
+                if (!allLines) parts.push('产品线: ' + Array.from(activeLines).join('、'));
+                if (currentQuarter !== 'all') parts.push(currentQuarter);
+                filterText.textContent = parts.join(' · ') || '全部';
+                filterCount.textContent = count;
+            }
+        }
+
+        function showTooltip(e, req) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = '<div style="font-weight:600;margin-bottom:8px;">' + req.name + '</div><div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap;"><span class="priority-badge priority-' + req.priority + '">' + req.priority + '</span><span style="background:' + lineColors[req.line] + ';color:white;padding:2px 8px;border-radius:4px;font-size:11px;">' + req.line + '</span><span>' + req.owner + '</span><span>' + req.startMonth + '月-' + req.endMonth + '月</span></div><div style="color:#9ca3af;font-size:12px;">' + req.desc + '</div>';
+            tooltip.classList.add('show');
+            moveTooltip(e);
+        }
+        function hideTooltip() { document.getElementById('tooltip').classList.remove('show'); }
+        function moveTooltip(e) { const tooltip = document.getElementById('tooltip'); tooltip.style.left = Math.min(e.clientX + 15, window.innerWidth - 420) + 'px'; tooltip.style.top = Math.min(e.clientY + 15, window.innerHeight - 100) + 'px'; }
+
+        function initCharts() {
+            // 检测Chart.js是否加载成功
+            if (typeof Chart === 'undefined') {
+                console.error('❌ Chart.js库加载失败，请检查网络连接或CDN是否可访问');
+                document.getElementById('priorityChart').parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;text-align:center;">⚠️ 图表加载失败<br>请刷新页面重试</div>';
+                document.getElementById('ownerChart').parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;text-align:center;">⚠️ 图表加载失败<br>请刷新页面重试</div>';
+                document.getElementById('resourceChart').parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;text-align:center;">⚠️ 图表加载失败<br>请刷新页面重试</div>';
+                return;
+            }
+
+            new Chart(document.getElementById('priorityChart').getContext('2d'), { type: 'doughnut', data: { labels: ['P0 核心', 'P1 重要', 'P2 一般'], datasets: [{ data: [37, 29, 23], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+            new Chart(document.getElementById('ownerChart').getContext('2d'), { type: 'bar', data: { labels: ['嘉劲', '志锐', '潘永明', '康丹'], datasets: [{ label: '需求数量', data: [25, 18, 27, 19], backgroundColor: ['#8b5cf6', '#10b981', '#3b82f6', '#f59e0b'], borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } }, onClick: (e, elements) => { if (elements.length > 0) { const owners = ['嘉劲', '志锐', '潘永明', '康丹']; const owner = owners[elements[0].index]; activeOwners = new Set([owner]); document.querySelectorAll('.filter-chip[data-owner]').forEach(el => { if (el.dataset.owner === owner) { el.classList.add('active'); el.classList.remove('inactive'); } else { el.classList.remove('active'); el.classList.add('inactive'); } }); renderGantt(); document.getElementById('gantt-container').scrollIntoView({ behavior: 'smooth' }); } } } });
+            new Chart(document.getElementById('resourceChart').getContext('2d'), { type: 'bar', data: { labels: ['Q1', 'Q2', 'Q3', 'Q4'], datasets: [ { label: '新版装修', data: [385, 272, 187, 73], backgroundColor: '#3b82f6', borderRadius: 4 }, { label: '云站后台', data: [285, 338, 311, 349], backgroundColor: '#10b981', borderRadius: 4 }, { label: 'AI工具', data: [838, 745, 873, 929], backgroundColor: '#8b5cf6', borderRadius: 4 }, { label: '营销系统', data: [0, 75, 267, 183], backgroundColor: '#ec4899', borderRadius: 4 }, ] }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } }, tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + context.parsed.y + '人天'; }, footer: function(tooltipItems) { let total = 0; tooltipItems.forEach(item => { total += item.parsed.y; }); const workingDays = {'Q1': 58, 'Q2': 55, 'Q3': 63, 'Q4': 59}; const quarter = tooltipItems[0].label; return '季度总计: ' + total + '人天 (26人×' + workingDays[quarter] + '天)'; } } } }, scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: '人天' }, ticks: { callback: function(value) { return value + '天'; } } } }, onClick: (e, elements) => { if (elements.length > 0) { const lines = ['装修', '后台', 'AI', '营销']; selectOnlyLine(lines[elements[0].datasetIndex]); } } } });
+        }
+    </script>
+</body>
+</html>
